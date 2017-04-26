@@ -33,6 +33,11 @@ image_config_path="${image_config_dir}/config.xml"
 
 CONTAINER_MEMORY_IN_BYTES=`cat /sys/fs/cgroup/memory/memory.limit_in_bytes`
 DEFAULT_MEMORY_CEILING=$((2**40-1))
+
+if [ -z $MAX_METASPACE_SIZE ]; then
+    MAX_METASPACE_SIZE=100m
+fi
+
 if [ "${CONTAINER_MEMORY_IN_BYTES}" -lt "${DEFAULT_MEMORY_CEILING}" ]; then
 
     if [ -z $CONTAINER_HEAP_PERCENT ]; then
@@ -62,7 +67,7 @@ fi
 
 if [ -z $JAVA_GC_OPTS ]; then
   # note - MaxPermSize no longer valid with v8 of the jdk ... used to have -XX:MaxPermSize=100m
-  JAVA_GC_OPTS="-XX:+UseParallelGC -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -XX:MaxMetaspaceSize=100m"
+  JAVA_GC_OPTS="-XX:+UseParallelGC -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -XX:MaxMetaspaceSize=${MAX_METASPACE_SIZE}"
 fi
 
 if [ ! -z "${USE_JAVA_DIAGNOSTICS}" ]; then
