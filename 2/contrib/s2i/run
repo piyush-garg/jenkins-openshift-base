@@ -122,7 +122,7 @@ if [ ! -f "${image_config_dir}/credentials.xml" ]; then
 fi
 
 echo "Copying Jenkins configuration to ${JENKINS_HOME} ..."
-cp -fr /opt/openshift/configuration/* ${JENKINS_HOME}
+cp -frL /opt/openshift/configuration/* ${JENKINS_HOME}
 rm -rf /opt/openshift/configuration/*
 
 
@@ -147,7 +147,7 @@ fi
 if [ "$(ls -A /opt/openshift/plugins 2>/dev/null)" ]; then
   mkdir -p ${JENKINS_HOME}/plugins
   echo "Copying $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
-  cp -fr /opt/openshift/plugins/* ${JENKINS_HOME}/plugins/
+  cp -frL /opt/openshift/plugins/* ${JENKINS_HOME}/plugins/
   rm -rf /opt/openshift/plugins
 fi
 
