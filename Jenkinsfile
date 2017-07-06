@@ -3,11 +3,11 @@
 def name = 'jenkins-openshift-base'
 def org = 'fabric8io'
 dockerTemplate{
-    goNode{
+    s2iNode(s2iImage: 'fabric8/s2i-builder:0.0.3'){
         git "https://github.com/${org}/${name}.git"
         if (env.BRANCH_NAME.startsWith('PR-')) {
             echo 'Running CI pipeline'
-            container('go') {
+            container('s2i') {
                 sh 'make build VERSION=2'
             }
         } else if (env.BRANCH_NAME.equals('master')) {
@@ -15,7 +15,7 @@ dockerTemplate{
             def newVersion = getNewVersion {}
 
             stage 'build'
-            container('go') {
+            container('s2i') {
                 sh 'make build VERSION=2'
             }
             
