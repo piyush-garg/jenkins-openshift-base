@@ -14,13 +14,13 @@ MAINTAINER Ben Parees <bparees@redhat.com>
 
 # Jenkins LTS packages from
 # https://pkg.jenkins.io/redhat-stable/
-ENV JENKINS_VERSION=2.46.1 \
+ENV JENKINS_VERSION=2.69 \
     HOME=/var/lib/jenkins \
     JENKINS_HOME=/var/lib/jenkins \
     JENKINS_UC=https://updates.jenkins-ci.org
 
 LABEL k8s.io.description="Jenkins is a continuous integration server" \
-      k8s.io.display-name="Jenkins 2.46.1" \
+      k8s.io.display-name="Jenkins 2.69" \
       openshift.io.expose-services="8080:http" \
       openshift.io.tags="jenkins,jenkins2,ci" \
       io.openshift.s2i.scripts-url=image:///usr/libexec/s2i
@@ -28,10 +28,10 @@ LABEL k8s.io.description="Jenkins is a continuous integration server" \
 # 8080 for main web interface, 50000 for slave agents
 EXPOSE 8080 50000
 
-RUN curl https://pkg.jenkins.io/redhat-stable/jenkins.repo -o /etc/yum.repos.d/jenkins.repo && \
-    rpm --import https://pkg.jenkins.io/redhat-stable/jenkins-ci.org.key && \
+RUN curl https://pkg.jenkins.io/redhat/jenkins.repo -o /etc/yum.repos.d/jenkins.repo && \
+    rpm --import https://pkg.jenkins.io/redhat/jenkins-ci.org.key && \
     yum install -y centos-release-scl-rh && \
-    INSTALL_PKGS="rsync gettext git tar zip unzip java-1.8.0-openjdk java-1.8.0-openjdk.i686 java-1.8.0-openjdk-devel java-1.8.0-openjdk-devel.i686 jenkins-2.46.1-1.1" && \
+    INSTALL_PKGS="rsync gettext git tar zip unzip java-1.8.0-openjdk java-1.8.0-openjdk.i686 java-1.8.0-openjdk-devel java-1.8.0-openjdk-devel.i686 jenkins-2.69-1.1" && \
     yum -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all  && \
