@@ -41,6 +41,12 @@ RUN curl https://pkg.jenkins.io/redhat/jenkins.repo -o /etc/yum.repos.d/jenkins.
     mv openshift*/oc /usr/local/bin && \
     rm -rf openshift-origin-client-tools-*
 
+# Google cloud stackdriver agent
+RUN yum install -y wget && \
+  mkdir /opt/cdbg && \
+  wget -qO- https://storage.googleapis.com/cloud-debugger/compute-java/debian-wheezy/cdbg_java_agent_gce.tar.gz | \
+  tar xvz -C /opt/cdbg
+
 COPY ./contrib/openshift /opt/openshift
 COPY ./contrib/jenkins /usr/local/bin
 ADD ./contrib/s2i /usr/libexec/s2i

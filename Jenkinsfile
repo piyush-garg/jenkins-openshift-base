@@ -10,22 +10,32 @@ dockerTemplate{
             container('s2i') {
                 sh 'make build VERSION=2'
             }
+
+            def newVersion = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+            stage ('push to dockerhub'){
+                container('docker') {
+                    sh "docker tag openshift/jenkins-2-centos7:latest fabric8/jenkins-openshift-base:${newVersion}"
+                    sh "docker push fabric8/jenkins-openshift-base:${newVersion}"
+                }
+            }
+
         } else if (env.BRANCH_NAME.equals('master')) {
             echo 'Running CD pipeline'
             def newVersion = getNewVersion {}
 
-            stage 'build'
-            container('s2i') {
-                sh 'make build VERSION=2'
+            stage ('build'){
+                container('s2i') {
+                    sh 'make build VERSION=2'
+                }
             }
-            
-            
-            stage 'push to dockerhub'
-            container('docker') {
-                sh "docker tag openshift/jenkins-2-centos7:latest fabric8/jenkins-openshift-base:${newVersion}"
-                sh "docker push fabric8/jenkins-openshift-base:${newVersion}"
+
+            stage ('push to dockerhub'){
+                container('docker') {
+                    sh "docker tag openshift/jenkins-2-centos7:latest fabric8/jenkins-openshift-base:${newVersion}"
+                    sh "docker push fabric8/jenkins-openshift-base:${newVersion}"
+                }
             }
-            
+
             // pushPomPropertyChangePR {
             //     propertyName = 'jenkins-openshift.version'
             //     projects = [
