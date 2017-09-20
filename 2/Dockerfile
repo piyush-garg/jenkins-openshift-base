@@ -19,6 +19,8 @@ ENV JENKINS_VERSION=2.69 \
     JENKINS_HOME=/var/lib/jenkins \
     JENKINS_UC=https://updates.jenkins-ci.org
 
+ENV EXPOSECONTROLLER_VERSION 2.3.26
+
 LABEL k8s.io.description="Jenkins is a continuous integration server" \
       k8s.io.display-name="Jenkins 2.69" \
       openshift.io.expose-services="8080:http" \
@@ -39,7 +41,11 @@ RUN curl https://pkg.jenkins.io/redhat/jenkins.repo -o /etc/yum.repos.d/jenkins.
     set -o pipefail && curl -L https://github.com/openshift/origin/releases/download/v1.4.1/openshift-origin-client-tools-v1.4.1-3f9807a-linux-64bit.tar.gz | \
     tar -zx && \
     mv openshift*/oc /usr/local/bin && \
-    rm -rf openshift-origin-client-tools-*
+    rm -rf openshift-origin-client-tools-* && \
+    curl -L https://github.com/fabric8io/exposecontroller/releases/download/v$EXPOSECONTROLLER_VERSION/exposecontroller-linux-amd64 > exposecontroller && \
+    chmod +x exposecontroller && \
+    mv exposecontroller /usr/bin/
+
 
 # Google cloud stackdriver agent
 RUN yum install -y wget && \
