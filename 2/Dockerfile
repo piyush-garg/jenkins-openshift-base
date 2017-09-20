@@ -19,7 +19,7 @@ ENV JENKINS_VERSION=2.69 \
     JENKINS_HOME=/var/lib/jenkins \
     JENKINS_UC=https://updates.jenkins-ci.org
 
-ENV EXPOSECONTROLLER_VERSION 2.3.26
+ENV EXPOSECONTROLLER_VERSION 2.3.27
 
 LABEL k8s.io.description="Jenkins is a continuous integration server" \
       k8s.io.display-name="Jenkins 2.69" \
