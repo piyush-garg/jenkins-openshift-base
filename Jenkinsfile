@@ -42,11 +42,12 @@ dockerTemplate{
 
 def updateDownstreamRepos(newVersion){
     container('s2i') {
-        git "git@github.com:fabric8io/openshift-jenkins-s2i-config.git"
-        def flow = new io.fabric8.Fabric8Commands()
         sh 'chmod 600 /root/.ssh-git/ssh-key'
         sh 'chmod 600 /root/.ssh-git/ssh-key.pub'
         sh 'chmod 700 /root/.ssh-git'
+
+        git "git@github.com:fabric8io/openshift-jenkins-s2i-config.git"
+        def flow = new io.fabric8.Fabric8Commands()
 
         sh "git config user.email fabric8cd@gmail.com"
         sh "git config user.name fabric8-cd"
@@ -60,7 +61,7 @@ def updateDownstreamRepos(newVersion){
         sh "git add Jenkinsfile"
         sh "git commit -m \"${message}\""
         sh "git push origin ${branch}"
-        def prId = flow.createPullRequest(message, gitRepo, branch)
+        def prId = flow.createPullRequest(message, 'fabric8io/openshift-jenkins-s2i-config', branch)
         //flow.mergePR(gitRepo, prId)
     }
 }
