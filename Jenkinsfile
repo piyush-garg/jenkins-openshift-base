@@ -9,6 +9,7 @@ dockerTemplate{
             echo 'Running CI pipeline'
             container('s2i') {
                 sh 'make build VERSION=2'
+                sh 'make build VERSION=slave-base'
             }
 
             def newVersion = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
@@ -26,6 +27,7 @@ dockerTemplate{
             stage ('build'){
                 container('s2i') {
                     sh 'make build VERSION=2'
+                    sh 'make build VERSION=slave-base'
                 }
             }
 
