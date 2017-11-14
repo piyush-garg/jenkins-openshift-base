@@ -34,7 +34,10 @@ dockerTemplate{
             stage ('push to dockerhub'){
                 container('docker') {
                     sh "docker tag openshift/jenkins-2-centos7:latest fabric8/jenkins-openshift-base:${newVersion}"
+                    sh "docker tag openshift/jenkins-slave-base-centos7:latest fabric8/jenkins-slave-base-centos7:${newVersion}"
+
                     sh "docker push fabric8/jenkins-openshift-base:${newVersion}"
+                    sh "docker push fabric8/jenkins-slave-base-centos7:${newVersion}"
                 }
             }
             updateDownstreamRepos(newVersion)
