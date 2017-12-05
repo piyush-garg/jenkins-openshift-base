@@ -33,7 +33,7 @@ EXPOSE 8080 50000
 RUN curl https://pkg.jenkins.io/redhat/jenkins.repo -o /etc/yum.repos.d/jenkins.repo && \
     rpm --import https://pkg.jenkins.io/redhat/jenkins-ci.org.key && \
     yum install -y centos-release-scl-rh && \
-    INSTALL_PKGS="rsync gettext git tar zip unzip java-1.8.0-openjdk java-1.8.0-openjdk.i686 java-1.8.0-openjdk-devel java-1.8.0-openjdk-devel.i686 jenkins-2.69-1.1" && \
+    INSTALL_PKGS="rsync gettext git tar zip unzip java-1.8.0-openjdk java-1.8.0-openjdk.i686 java-1.8.0-openjdk-devel java-1.8.0-openjdk-devel.i686 jenkins-$JENKINS_VERSION" && \
     yum -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all  && \
