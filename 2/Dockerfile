@@ -14,7 +14,7 @@ MAINTAINER Ben Parees <bparees@redhat.com>
 
 # Jenkins LTS packages from
 # https://pkg.jenkins.io/redhat-stable/
-ENV JENKINS_VERSION=2.69 \
+ENV JENKINS_VERSION=2.73.3  \
     HOME=/var/lib/jenkins \
     JENKINS_HOME=/var/lib/jenkins \
     JENKINS_UC=https://updates.jenkins-ci.org
@@ -53,7 +53,7 @@ RUN yum install -y wget && \
   wget -qO- https://storage.googleapis.com/cloud-debugger/compute-java/debian-wheezy/cdbg_java_agent_gce.tar.gz | \
   tar xvz -C /opt/cdbg
 
-# Updatebot needs maven and nodejs in the Jenkins master 
+# Updatebot needs maven and nodejs in the Jenkins master
 # Maven
 RUN curl -L http://mirrors.ukfast.co.uk/sites/ftp.apache.org/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar -C /opt -xzv
 ENV M2_HOME /opt/apache-maven-3.3.9
