@@ -14,7 +14,7 @@ MAINTAINER Ben Parees <bparees@redhat.com>
 
 # Jenkins LTS packages from
 # https://pkg.jenkins.io/redhat-stable/
-ENV JENKINS_VERSION=2.73.3  \
+ENV JENKINS_VERSION=2.73.3-1.1 \
     HOME=/var/lib/jenkins \
     JENKINS_HOME=/var/lib/jenkins \
     JENKINS_UC=https://updates.jenkins-ci.org
