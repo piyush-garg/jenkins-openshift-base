@@ -4,7 +4,7 @@ def name = 'jenkins-openshift-base'
 def org = 'fabric8io'
 dockerTemplate{
     s2iNode(s2iImage: 'fabric8/s2i-builder:0.0.3'){
-        git "https://github.com/${org}/${name}.git"
+        checkout scm
         if (env.BRANCH_NAME.startsWith('PR-')) {
             echo 'Running CI pipeline'
             container('s2i') {
