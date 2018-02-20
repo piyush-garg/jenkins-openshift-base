@@ -51,19 +51,6 @@ RUN yum install -y wget && \
   wget -qO- https://storage.googleapis.com/cloud-debugger/compute-java/debian-wheezy/cdbg_java_agent_gce.tar.gz | \
   tar xvz -C /opt/cdbg
 
-# Updatebot needs maven and nodejs in the Jenkins master
-# Maven
-RUN curl -L http://mirrors.ukfast.co.uk/sites/ftp.apache.org/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar -C /opt -xzv
-ENV M2_HOME /opt/apache-maven-3.3.9
-ENV maven.home $M2_HOME
-ENV M2 $M2_HOME/bin
-ENV PATH $M2:$PATH
-
-# nodejs
-ENV NODE_VERSION 8.7.0
-RUN wget http://nodejs.org/dist/v0.10.30/node-v0.10.30-linux-x64.tar.gz
-RUN tar --strip-components 1 -xzvf node-v* -C /usr/local
-
 # Setup zabbix_sender for monitoring
 # Installation commands from  https://www.zabbix.com/download?zabbix=3.4&os_distribution=centos&os_version=7&db=MySQL
 RUN rpm -i http://repo.zabbix.com/zabbix/3.4/rhel/7/x86_64/zabbix-release-3.4-2.el7.noarch.rpm && \
