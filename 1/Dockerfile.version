@@ -85,3 +85,4 @@ VOLUME ["/var/lib/jenkins"]
 
 USER 1001
 CMD ["/usr/libexec/s2i/run"]
+LABEL io.openshift.builder-version="eac5c88"
