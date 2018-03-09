@@ -11,10 +11,7 @@ RUN yum install -y centos-release-scl-rh && \
     yum install -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all && \
-    set -o pipefail && curl -L https://github.com/openshift/origin/releases/download/v1.4.1/openshift-origin-client-tools-v1.4.1-3f9807a-linux-64bit.tar.gz | \
-    tar -zx && \
-    mv openshift*/oc /usr/local/bin && \
-    rm -rf openshift-origin-client-tools-* && \
+    yum -y install centos-release-openshift-origin && yum -y install origin-clients && \
     mkdir -p /home/jenkins && \
     chown -R 1001:0 /home/jenkins && \
     chmod -R g+w /home/jenkins && \
