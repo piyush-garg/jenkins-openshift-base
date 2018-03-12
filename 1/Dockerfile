@@ -30,10 +30,10 @@ RUN curl https://pkg.jenkins.io/redhat-stable/jenkins.repo -o /etc/yum.repos.d/j
     yum install -y centos-release-scl-rh && \
     INSTALL_PKGS="rsync gettext git tar zip unzip java-1.8.0-openjdk java-1.8.0-openjdk.i686 java-1.8.0-openjdk-devel java-1.8.0-openjdk-devel.i686 jenkins-1.651.3-1.1" && \
     yum -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
+    yum -y install centos-release-openshift-origin && yum -y install origin-clients && \
     rpm -V $INSTALL_PKGS && \
     yum clean all  && \
-    localedef -f UTF-8 -i en_US en_US.UTF-8 && \
-    yum -y install centos-release-openshift-origin && yum -y install origin-clients
+    localedef -f UTF-8 -i en_US en_US.UTF-8
 
 COPY ./contrib/openshift /opt/openshift
 COPY ./contrib/jenkins /usr/local/bin
