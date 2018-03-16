@@ -43,7 +43,7 @@ if [ "${CONTAINER_MEMORY_IN_BYTES}" -lt "${DEFAULT_MEMORY_CEILING}" ]; then
     if [ -z $CONTAINER_HEAP_PERCENT ]; then
         CONTAINER_HEAP_PERCENT=0.50
     fi
-    
+
     CONTAINER_MEMORY_IN_MB=$((${CONTAINER_MEMORY_IN_BYTES}/1024**2))
     #if machine has 4GB or less, meaning max heap of 2GB given current default, force use of 32bit to save space unless user
     #specifically want to force 64bit
@@ -54,7 +54,7 @@ if [ "${CONTAINER_MEMORY_IN_BYTES}" -lt "${DEFAULT_MEMORY_CEILING}" ]; then
 	echo "max heap in MB is ${CONTAINER_HEAP_MAX} and 64 bit was not explicitly set so using 32 bit Java"
 	alternatives --set java $JVMPath32bit
     fi
-    
+
     JAVA_MAX_HEAP_PARAM="-Xmx${CONTAINER_HEAP_MAX}m"
     if [ -z $CONTAINER_INITIAL_PERCENT ]; then
       CONTAINER_INITIAL_PERCENT=0.07
@@ -149,9 +149,11 @@ fi
 
 if [ "$(ls -A /opt/openshift/plugins 2>/dev/null)" ]; then
   mkdir -p ${JENKINS_HOME}/plugins
-  echo "Copying $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
-  cp -frL /opt/openshift/plugins/* ${JENKINS_HOME}/plugins/
-  rm -rf /opt/openshift/plugins
+  # if empty then only copy the plugins
+  if [ -z "$(ls -A ${JENKINS_HOME}/plugins)" ]; then
+    echo "Copying $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
+    cp -frL /opt/openshift/plugins/* ${JENKINS_HOME}/plugins/
+  fi
 fi
 
 echo "Creating initial Jenkins 'admin' user ..."
