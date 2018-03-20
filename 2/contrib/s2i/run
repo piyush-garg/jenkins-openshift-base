@@ -126,8 +126,6 @@ fi
 
 echo "Copying Jenkins configuration to ${JENKINS_HOME} ..."
 cp -frL /opt/openshift/configuration/* ${JENKINS_HOME}
-rm -rf /opt/openshift/configuration/*
-
 
 # If the INSTALL_PLUGINS variable is populated, then attempt to install
 # those plugins before copying them over to JENKINS_HOME
