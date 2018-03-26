@@ -11,10 +11,116 @@ source /usr/local/bin/kube-slave-common.sh
 
 #NOTE:  periodically check https://ce-gitlab.usersys.redhat.com/ce/jboss-dockerfiles/blob/develop/scripts/os-java-run/added/java-default-options for updates
 
+# NOTE on fabric8 this is going to be a readonly mount
+# see: https://github.com/openshiftio/openshift.io/issues/2608
+IMAGE_CONFIG_DIR="/opt/openshift/configuration"
+
+# temp directory where template expansion and configs will be copied to before
+# being copied to the $JENKINS_HOME
+IMAGE_CONFIG_GEN_DIR=$(mktemp --dry-run -d -p "$JENKINS_HOME")
+
+# file that holds the timestamp/signature of config files mounted through configmap
+CONFIG_TIMESTAMP="${CONFIG_TIMESTAMP:-config-timestamp}"
+
+log() {
+  local level=$1; shift
+  local datetime=$(date "+%b %d, %Y %r")
+  echo "${datetime} ${level}: $*"
+}
+
+log_info() {
+  log INFO "$@"
+}
+
+log_warn() {
+  log WARN "$@"
+}
+
+config_changed() {
+  # don't worry about configurations if there isn't a dir
+  # but note that the image we are building already has the dir
+  [ -d ${IMAGE_CONFIG_DIR} ] || return 1
+
+  local img_config_timestamp="$IMAGE_CONFIG_DIR/$CONFIG_TIMESTAMP"
+
+  # treat absense of timestamp in configmap as timestamp changed to be on the
+  # safe side so that configuration files are generated
+  [ -f "$img_config_timestamp" ] || return 0
+
+  local our_timestamp="$JENKINS_HOME/$CONFIG_TIMESTAMP"
+  touch -a "$our_timestamp"
+
+  # return 0 if files are different
+  [[ $(cmp -s "$img_config_timestamp" "$our_timestamp") != 0 ]]
+}
+
+generate_jenkins_config()  {
+  local config_file="config.xml"
+  local config_tpl_path="$IMAGE_CONFIG_DIR/$config_file.tpl"
+
+  [ -f "$config_tpl_path" ] || {
+    log_warn "Skipping generation of '$config_file' as $config_tpl_path is not found"
+    return 0
+  }
+
+  # If it contains a template (tpl) file, we can do additional manipulations
+  # to customize the configuration.
+  export KUBERNETES_CONFIG=$(generate_kubernetes_config)
+
+  for name in $(get_is_names); do
+    log_info "... adding image ${name}:latest as Kubernetes slave"
+  done
+  log_info "Generating kubernetes-plugin configuration (${config_tpl_path})"
+  envsubst < "$config_tpl_path" > "${IMAGE_CONFIG_GEN_DIR}/$config_file"
+}
+
+generate_credentials()  {
+  local cred_file="credentials.xml"
+  local cred_tpl_path="$IMAGE_CONFIG_DIR/$cred_file.tpl"
+
+  [ -f "$cred_tpl_path" ] || {
+    log_warn "Skipping generation of '$cred_file' as $config_tpl_path is not found"
+    return 0
+  }
+
+  [ -z "${KUBERNETES_CONFIG}" ] && {
+    log_warn "Skipping generaton of kubernetes-plugin credentials as KUBERNETES_CREDENTIALS is blank"
+    return 0
+  }
+
+  log_info "Generating kubernetes-plugin credentials ($cred_file) ..."
+  export KUBERNETES_CREDENTIALS=$(generate_kubernetes_credentials)
+
+  # Fix the envsubst trying to substitute the $Hash inside credentials.xml
+  export Hash="\$Hash"
+  envsubst < "$cred_tpl_path" > "${IMAGE_CONFIG_GEN_DIR}/$cred_file"
+}
+
+copy_config_files() {
+  log_info "Copying Jenkins configuration to $JENKINS_HOME"
+  cp -frL "$IMAGE_CONFIG_DIR/"* "$JENKINS_HOME/"
+  cp -frL "$IMAGE_CONFIG_GEN_DIR/"* "$JENKINS_HOME/"
+
+  # we don't need the templates
+  log_info "Removing template files (*.tpl) from $JENKINS_HOME"
+  rm -f "$JENKINS_HOME/"*.tpl
+}
+
+
+generate_all_configs() {
+  mkdir -p "$IMAGE_CONFIG_GEN_DIR"
+  log_info "Using temp directory $IMAGE_CONFIG_GEN_DIR for generating configurations"
+  generate_jenkins_config
+  generate_credentials
+  copy_config_files
+  rm -fr "${IMAGE_CONFIG_GEN_DIR}"
+  log_info "Removed temp directory $IMAGE_CONFIG_GEN_DIR"
+}
+
+
 #get the fully qualified paths to both 32 and 64 bit java
 JVMPath32bit=`alternatives --display java | grep family | grep i386 | awk '{print $1}'`
 JVMPath64bit=`alternatives --display java | grep family | grep x86_64 | awk '{print $1}'`
-
 
 # set the java version used based on OPENSHIFT_JENKINS_JVM_ARCH
 if [ -z $OPENSHIFT_JENKINS_JVM_ARCH  ]; then
@@ -28,8 +134,6 @@ else
     alternatives --set java $JVMPath32bit
 fi
 
-image_config_dir="/opt/openshift/configuration"
-image_config_path="${image_config_dir}/config.xml"
 
 CONTAINER_MEMORY_IN_BYTES=`cat /sys/fs/cgroup/memory/memory.limit_in_bytes`
 DEFAULT_MEMORY_CEILING=$((2**40-1))
@@ -85,6 +189,7 @@ fi
 # the 'jenkins' user name to this UID.
 generate_passwd_file
 
+rm -rf /tmp/war
 mkdir /tmp/war
 unzip -q /usr/lib/jenkins/jenkins.war -d /tmp/war
 if [ -e ${JENKINS_HOME}/password ]; then
@@ -93,39 +198,15 @@ fi
 new_password_hash=`obfuscate_password ${JENKINS_PASSWORD:-password} $old_salt`
 
 # finish the move of the default logs dir, /var/log/jenkins, to the volume mount
-mkdir ${JENKINS_HOME}/logs
+mkdir -p ${JENKINS_HOME}/logs
 ln -sf ${JENKINS_HOME}/logs /var/log/jenkins
 
 
-# This container hasn't been configured yet, so copy the default configuration from
-# the image into the jenkins config path (which should be a volume for persistence).
-if [ ! -f "${image_config_path}" ]; then
-  # If it contains a template (tpl) file, we can do additional manipulations to customize
-  # the configuration.
-  if [ -f "${image_config_path}.tpl" ]; then
-    export KUBERNETES_CONFIG=$(generate_kubernetes_config)
-    for name in $(get_is_names); do
-      echo "Adding image ${name}:latest as Kubernetes slave ..."
-    done
-    echo "Generating kubernetes-plugin configuration (${image_config_path}.tpl) ..."
-    envsubst < "${image_config_path}.tpl" > "${image_config_path}"
-  fi
+# check if the configuration needs to be updated by comparing the timestamps
+if config_changed; then
+  generate_all_configs
 fi
 
-if [ ! -f "${image_config_dir}/credentials.xml" ]; then
-  if [ -f "${image_config_dir}/credentials.xml.tpl" ]; then
-    if [ ! -z "${KUBERNETES_CONFIG}" ]; then
-      echo "Generating kubernetes-plugin credentials (${JENKINS_HOME}/credentials.xml.tpl) ..."
-      export KUBERNETES_CREDENTIALS=$(generate_kubernetes_credentials)
-    fi
-    # Fix the envsubst trying to substitute the $Hash inside credentials.xml
-    export Hash="\$Hash"
-    envsubst < "${image_config_dir}/credentials.xml.tpl" > "${image_config_dir}/credentials.xml"
-  fi
-fi
-
-echo "Copying Jenkins configuration to ${JENKINS_HOME} ..."
-cp -frL "${image_config_dir}/*" ${JENKINS_HOME}
 
 # If the INSTALL_PLUGINS variable is populated, then attempt to install
 # those plugins before copying them over to JENKINS_HOME
@@ -173,10 +254,6 @@ if [ -e ${JENKINS_HOME}/password ]; then
   fi
 fi
 
-if [ -f "${CONFIG_PATH}.tpl" -a ! -f "${CONFIG_PATH}" ]; then
-  echo "Processing Jenkins configuration (${CONFIG_PATH}.tpl) ..."
-  envsubst < "${CONFIG_PATH}.tpl" > "${CONFIG_PATH}"
-fi
 
 rm -rf /tmp/war
 
