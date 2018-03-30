@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export JENKINS_HOME=/var/lib/jenkins
+export JENKINS_HOME=${JENKINS_HOME:-/var/lib/jenkins}
 export CONFIG_PATH=${JENKINS_HOME}/config.xml
 export OPENSHIFT_API_URL=https://openshift.default.svc.cluster.local
 export KUBE_SA_DIR=/run/secrets/kubernetes.io/serviceaccount
