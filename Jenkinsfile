@@ -1,5 +1,5 @@
 #!/usr/bin/groovy
-@Library('github.com/fabric8io/fabric8-pipeline-library@master')
+@Library('github.com/fabric8io/fabric8-pipeline-library@ssh')
 def name = 'jenkins-openshift-base'
 def org = 'fabric8io'
 dockerTemplate{
@@ -47,15 +47,11 @@ dockerTemplate{
 
 def updateDownstreamRepos(newVersion){
     container('s2i') {
-        sh 'chmod 600 /root/.ssh-git/ssh-key'
-        sh 'chmod 600 /root/.ssh-git/ssh-key.pub'
-        sh 'chmod 700 /root/.ssh-git'
+
+        def flow = new io.fabric8.Fabric8Commands()
+        flow.setupGitSSH()
 
         git "git@github.com:fabric8io/openshift-jenkins-s2i-config.git"
-        def flow = new io.fabric8.Fabric8Commands()
-
-        sh "git config user.email fabric8cd@gmail.com"
-        sh "git config user.name fabric8-cd"
 
         def uid = UUID.randomUUID().toString()
         def branch = "versionUpdate${uid}"
