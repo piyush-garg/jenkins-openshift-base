@@ -1,5 +1,5 @@
 #!/usr/bin/groovy
-@Library('github.com/fabric8io/fabric8-pipeline-library@ssh')
+@Library('github.com/fabric8io/fabric8-pipeline-library@master')
 def name = 'jenkins-openshift-base'
 def org = 'fabric8io'
 dockerTemplate{
@@ -51,17 +51,19 @@ def updateDownstreamRepos(newVersion){
         def flow = new io.fabric8.Fabric8Commands()
         flow.setupGitSSH()
 
-        git "git@github.com:fabric8io/openshift-jenkins-s2i-config.git"
-
         def uid = UUID.randomUUID().toString()
         def branch = "versionUpdate${uid}"
-        sh "git checkout -b ${branch}"
-
-        sh "sed -i 's/baseImageVerion = .*/baseImageVerion = \"${newVersion}\"/g' Jenkinsfile"
         def message = "Update jenkins base image to ${newVersion}"
-        sh "git add Jenkinsfile"
-        sh "git commit -m \"${message}\""
-        sh "git push origin ${branch}"
+
+        sh """
+           git clone git@github.com:fabric8io/openshift-jenkins-s2i-config.git --depth 1
+           cd openshift-jenkins-s2i-config
+           git checkout -b ${branch}
+           sed -i 's/baseImageVerion = .*/baseImageVerion = \"${newVersion}\"/g' Jenkinsfile
+           git commit Jenkinsfile -m "${message}"
+           git push origin ${branch}
+           """
+
         def prId = flow.createPullRequest(message, 'fabric8io/openshift-jenkins-s2i-config', branch)
         //flow.mergePR(gitRepo, prId)
     }
