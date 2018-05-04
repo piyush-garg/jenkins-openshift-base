@@ -244,7 +244,9 @@ if [ "$(ls -A /opt/openshift/plugins 2>/dev/null)" ]; then
       copy_plugins
     else
       previous_version=$(<${JENKINS_HOME}/plugins/version.txt)
+      echo $previous_version
       new_version=$(</opt/openshift/plugins/version.txt)
+      echo $new_version
       if [ $new_version -gt $previous_version ]; then
         copy_plugins
       else
