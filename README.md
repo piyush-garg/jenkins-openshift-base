@@ -1,7 +1,7 @@
 Jenkins Docker Image [![Build Status](https://jenkins.cd.test.fabric8.io/buildStatus/icon?job=fabric8-jenkins/jenkins-openshift-base/master)](https://jenkins.cd.test.fabric8.io/job/fabric8-jenkins/job/jenkins-openshift-base/job/master/)
 ====================
 
-This repository contains Dockerfiles for a Jenkins Docker image intended for 
+This repository contains Dockerfiles for a Jenkins Docker image intended for
 use with [OpenShift v3](https://github.com/openshift/origin)
 
 For an example of how to use it, [see this sample.](https://github.com/openshift/origin/blob/master/examples/jenkins/README.md)
@@ -129,7 +129,7 @@ customized Docker image or you can use OpenShift Source build strategy.
 In order to include your modifications in Jenkins image, you need to have a Git
 repository with following directory structure:
 
-* `./plugins` folder that contains binary Jenkins plugins you want to copy into Jenkins 
+* `./plugins` folder that contains binary Jenkins plugins you want to copy into Jenkins
 * `./plugins.txt` file that list the plugins you want to install (see the section above)
 * `./configuration/jobs` folder that contains the Jenkins job definitions
 * `./configuration/config.xml` file that contains your custom Jenkins configuration
@@ -144,6 +144,15 @@ $ s2i build https://github.com/your/repository openshift/jenkins-1-centos7 your_
 ```
 NOTE:  if instead of adding a plugin you want to replace an existing plugin via dropping the binary plugin in the `./plugins` directory,
 make sure the filename ends in `.jpi`.
+
+NOTE : Update plugins -
+we broke the plugin update after changes due to https://github.com/openshiftio/openshift.io/issues/2612
+Hence introduce new way to update plugins(https://github.com/openshiftio/openshift.io/issues/3393)
+1. Once you modified plugin.txt or added any .jpi/hpi in plugins folder in this repo https://github.com/fabric8io/openshift-jenkins-s2i-config/
+2. Please run the script update-version.sh, it will just update the version.txt to next increamental number.
+3. git add version.txt
+4. commit this change with the PR required for upating the plugin to this https://github.com/fabric8io/openshift-jenkins-s2i-config/
+5. As you see in step 1-4 we introdued a version.txt we use this file to check if the plugins should be updated or not, for more details please check 2/s2i/assemble/run.
 
 ####  Installing on Startup
 
@@ -165,7 +174,7 @@ Visit [the upstream repository](https://github.com/openshift/jenkins-plugin), as
 Visit [the upstream repository](https://github.com/openshift/jenkins-client-plugin) as well as the [Jenkins plugin wiki](https://wiki.jenkins-ci.org/display/JENKINS/OpenShift+Client+Plugin).  With the lessons learned from OpenShift Pipeline Plugin, as well as adjustments to the rapid evolutions of both Jenkins and OpenShift, this experimental plugin, currently included in the Centos images for this repository, is viewed as the long term replacement for OpenShift Pipeline Plugin.
 
 * **OpenShift Sync Plugin**
-Visit [the upstream repository](https://github.com/openshift/jenkins-sync-plugin) as well as the [Jenkins plugin wiki](https://wiki.jenkins-ci.org/display/JENKINS/OpenShift+Sync+Plugin).  This plugin facilitates the integration between the OpenShift Jenkinsfile Build Strategy and Jenkins Pipelines.  See the [OpenShift documentation](https://docs.openshift.com) for more details. 
+Visit [the upstream repository](https://github.com/openshift/jenkins-sync-plugin) as well as the [Jenkins plugin wiki](https://wiki.jenkins-ci.org/display/JENKINS/OpenShift+Sync+Plugin).  This plugin facilitates the integration between the OpenShift Jenkinsfile Build Strategy and Jenkins Pipelines.  See the [OpenShift documentation](https://docs.openshift.com) for more details.
 
 * **Kubernetes Plugin**
 This plugin allows slaves to be dynamically provisioned on multiple Docker hosts using [Kubernetes](https://github.com/kubernetes/kubernetes). To learn how to use this plugin, see the [example](https://github.com/openshift/origin/tree/master/examples/jenkins/master-slave) available in the OpenShift Origin repository. For more details about plugin, visit the [plugin](https://wiki.jenkins-ci.org/display/JENKINS/Kubernetes+Plugin) web site.
@@ -187,11 +196,11 @@ Jenkins admin user
 
 The admin user name is set to `admin`.  There are now two supported means of authenticating:
 
-* If running outside of OpenShift, or running in OpenShift with the environment variable `OPENSHIFT_ENABLE_OAUTH` set to `false` on the container, default Jenkins authentication is used. 
+* If running outside of OpenShift, or running in OpenShift with the environment variable `OPENSHIFT_ENABLE_OAUTH` set to `false` on the container, default Jenkins authentication is used.
 You log in with the user name `admin`, supplying the password specified by the `JENKINS_PASSWORD` environment variable. If you do not override `JENKINS_PASSWORD`, the default password for `admin` is `password`.
 * If running in OpenShift and the environment variable `OPENSHIFT_ENABLE_OAUTH` is set to a value other than `false` on the container, the [OpenShift Login plugin](https://github.com/openshift/jenkins-openshift-login-plugin)
 manages the login process, and to login you specify valid credentials as required by the identity provider used by OpenShift.  In this case, the predefined `admin` user in the default Jenkins user database is now ignored.
-Unless there is an `admin` user defined within OpenShift with sufficient permissions to the project Jenkins is running in, you will not be able to do anything with Jenkins by logging in as `admin`.  
+Unless there is an `admin` user defined within OpenShift with sufficient permissions to the project Jenkins is running in, you will not be able to do anything with Jenkins by logging in as `admin`.
 
 A quick reminder on OpenShift identity providers: if, for example, the default OpenShift identity provider `Allow All` is used, you can provide any non-empty
 string as the password for any valid user for the OpenShift project Jenkins is running in.  Otherwise, if `Allow All` is not used as the identity provider, then valid credentials stored with your identity provider must be provided.
@@ -203,7 +212,7 @@ Jenkins using the example [jenkins-ephemeral](https://github.com/openshift/origi
 	```
 	$ oc describe serviceaccount jenkins
 	$ oc describe secret <serviceaccount secret name>
-	``` 
+	```
 
 Once authenticated, OpenShift roles determine which Jenkins permissions you have.  Any user with the OpenShift `admin` role for the OpenShift project Jenkins is running in will have the same permissions as those assigned to an administrative user within Jenkins.
 Users with the `edit` or `view` roles for the OpenShift project Jenkins is running in will have progressively reduced permissions within Jenkins.

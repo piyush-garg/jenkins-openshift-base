@@ -226,12 +226,33 @@ if [[ -n "${INSTALL_PLUGINS:-}" ]]; then
   /usr/local/bin/install-plugins.sh "${plugins_file}"
 fi
 
+copy_plugins() {
+    echo "Copying $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
+    cp -frL /opt/openshift/plugins/* ${JENKINS_HOME}/plugins/
+}
+
+# version.txt is maintained to check if the plugins should be copied over or not
+# The version.txt in this directory https://github.com/fabric8io/openshift-jenkins-s2i-config/tree/master/plugins
+# should be updated when a plugin is updated
 if [ "$(ls -A /opt/openshift/plugins 2>/dev/null)" ]; then
   mkdir -p ${JENKINS_HOME}/plugins
   # if empty then only copy the plugins
   if [ -z "$(ls -A ${JENKINS_HOME}/plugins)" ]; then
-    echo "Copying $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
-    cp -frL /opt/openshift/plugins/* ${JENKINS_HOME}/plugins/
+      copy_plugins
+  else
+    if [ ! -f ${JENKINS_HOME}/plugins/version.txt ]; then
+      copy_plugins
+    else
+      previous_version=$(<${JENKINS_HOME}/plugins/version.txt)
+      echo $previous_version
+      new_version=$(</opt/openshift/plugins/version.txt)
+      echo $new_version
+      if [ $new_version -gt $previous_version ]; then
+        copy_plugins
+      else
+        echo "skip copying plugins"
+      fi
+    fi
   fi
 fi
 
