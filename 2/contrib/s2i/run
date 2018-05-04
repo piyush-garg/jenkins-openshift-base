@@ -238,16 +238,19 @@ if [ "$(ls -A /opt/openshift/plugins 2>/dev/null)" ]; then
   mkdir -p ${JENKINS_HOME}/plugins
   # if empty then only copy the plugins
   if [ -z "$(ls -A ${JENKINS_HOME}/plugins)" ]; then
+      echo "plugins directory not found copy plugins"
       copy_plugins
   else
     if [ ! -f ${JENKINS_HOME}/plugins/version.txt ]; then
+      echo "version.txt not found copy plugins"
       copy_plugins
     else
       previous_version=$(<${JENKINS_HOME}/plugins/version.txt)
-      echo $previous_version
+      echo "version.txt previous_version: $previous_version"
       new_version=$(</opt/openshift/plugins/version.txt)
-      echo $new_version
+      echo "version.txt new_version: $new_version"
       if [ $new_version -gt $previous_version ]; then
+        echo "There is a new version of plugin, copy over plugins"
         copy_plugins
       else
         echo "skip copying plugins"
