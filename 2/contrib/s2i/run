@@ -226,6 +226,22 @@ if [[ -n "${INSTALL_PLUGINS:-}" ]]; then
   /usr/local/bin/install-plugins.sh "${plugins_file}"
 fi
 
+delete_plugins(){
+  list_of_plugins=$(diff --brief /opt/openshift/plugins ${JENKINS_HOME}/plugins | grep 'Only in' | grep ${JENKINS_HOME}/plugins | awk '{print $4}')
+  if [ ! -z "$list_of_plugins" ]; then
+    for plugin in $list_of_plugins
+    do
+      if [ ! -d "$JENKINS_HOME/plugins/$plugin" ]; then
+        echo "removing plugin: $plugin"
+        base_plugin_name=$(echo "$plugin" | cut -d'.' -f 1)
+        rm -rf $JENKINS_HOME/plugins/$base_plugin_name*
+      fi
+    done
+  else
+    echo "No plugins to be deleted"
+  fi
+}
+
 copy_plugins() {
     echo "Copying $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
     cp -frL /opt/openshift/plugins/* ${JENKINS_HOME}/plugins/
@@ -252,6 +268,7 @@ if [ "$(ls -A /opt/openshift/plugins 2>/dev/null)" ]; then
       if [ $new_version -gt $previous_version ]; then
         echo "There is a new version of plugin, copy over plugins"
         copy_plugins
+        delete_plugins
       else
         echo "skip copying plugins"
       fi
