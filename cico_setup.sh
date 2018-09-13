@@ -19,18 +19,12 @@ function setup() {
         eval "$(./env-toolkit load -f jenkins-env.json \
                 FABRIC8_HUB_TOKEN \
                 FABRIC8_DOCKERIO_CFG \
-                FABRIC8_GITHUB_SSH_KEY  \
                 ghprbActualCommit \
                 ghprbPullId \
                 BUILD_ID)"
 
         mkdir -p ${HOME}/.docker
         echo ${FABRIC8_DOCKERIO_CFG}|base64 --decode > ${HOME}/.docker/config.json
-
-        mkdir -p ${HOME}/.ssh
-        chmod 0700 ${HOME}/.ssh
-        echo ${FABRIC8_GITHUB_SSH_KEY} > ${HOME}/.ssh/id_rsa
-        chmod 0600 ${HOME}/.ssh/id_rsa
     fi
 
     get_hub_latest_release
