@@ -8,8 +8,8 @@ function get_hub_latest_release() {
   version=$(curl --silent "https://api.github.com/repos/github/hub/releases/latest" | # Get latest release from GitHub api
     grep '"tag_name":' |                                            # Get tag line
     sed -E -e 's/.*"([^"]+)".*/\1/'  -e 's/^v//'
-
   )
+
   curl -s -L https://github.com/github/hub/releases/download/v${version}/hub-linux-amd64-${version}.tgz |\
       tar -v -x --strip-components=2 -f- -z -C /usr/local/bin hub-linux-amd64-${version}/bin/hub
 }
