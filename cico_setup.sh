@@ -4,16 +4,6 @@
 
 set -ex
 
-function get_hub_latest_release() {
-  version=$(curl --silent "https://api.github.com/repos/github/hub/releases/latest" | # Get latest release from GitHub api
-    grep '"tag_name":' |                                            # Get tag line
-    sed -E -e 's/.*"([^"]+)".*/\1/'  -e 's/^v//'
-  )
-
-  curl -s -L https://github.com/github/hub/releases/download/v${version}/hub-linux-amd64-${version}.tgz |\
-      tar -v -x --strip-components=2 -f- -z -C /usr/local/bin hub-linux-amd64-${version}/bin/hub
-}
-
 function setup() {
     if [ -f jenkins-env.json ]; then
         eval "$(./env-toolkit load -f jenkins-env.json \
@@ -27,8 +17,6 @@ function setup() {
         mkdir -p ${HOME}/.docker
         echo ${FABRIC8_DOCKERIO_CFG}|base64 --decode > ${HOME}/.docker/config.json
     fi
-
-    get_hub_latest_release
 
     # We need to disable selinux for now, XXX
     /usr/sbin/setenforce 0 || :
@@ -77,12 +65,14 @@ function updateDownstreamRepos() {
     set -x
     cd /tmp/openshift-jenkins-s2i
     git checkout -b ${branch}
-    sed -i "s/baseImageVerion = .*/baseImageVerion = \"${newVersion}\"/g" Jenkinsfile
-    git commit Jenkinsfile -m "${message}"
+    sed -i "s/^BASE_IMAGE_VERSION=.*/BASE_IMAGE_VERSION=\"${newVersion}\"/g" cico_setup.sh
+    git commit cico_setup.sh -m "${message}"
 
     git push -u origin ${branch}
     set +x
-    echo "hub pull-request -m ${message}"
-    GITHUB_TOKEN=$(echo ${FABRIC8_HUB_TOKEN}|base64 --decode) /usr/local/bin/hub pull-request -m "${message}"
+    set +x
+    curl -s -X POST -L -H "Authorization: token $(echo ${FABRIC8_HUB_TOKEN}|base64 --decode)" \
+         -d "{\"title\": \"${message}\", \"base\":\"master\", \"head\":\"${branch}\"}" \
+         https://api.github.com/repos/fabric8io/openshift-jenkins-s2i-config/pulls
     set -x
 }
