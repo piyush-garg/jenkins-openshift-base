@@ -21,6 +21,7 @@ function setup() {
                 FABRIC8_DOCKERIO_CFG \
                 ghprbActualCommit \
                 ghprbPullId \
+                GIT_COMMIT \
                 BUILD_ID)"
 
         mkdir -p ${HOME}/.docker
@@ -40,7 +41,7 @@ function setup() {
 
 function build_push_images() {
     if [[ $1 == "release" ]];then
-        newVersion="v$(git rev-parse --short ${ghprbActualCommit})"
+        newVersion="v$(git rev-parse --short ${GIT_COMMIT})"
     else
         newVersion="PR-${ghprbPullId}-${BUILD_ID}"
     fi
