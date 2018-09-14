@@ -65,8 +65,8 @@ function updateDownstreamRepos() {
     set -x
     cd /tmp/openshift-jenkins-s2i
     git checkout -b ${branch}
-    sed -i "s/^BASE_IMAGE_VERSION=.*/BASE_IMAGE_VERSION=\"${newVersion}\"/g" cico_setup.sh
-    git commit cico_setup.sh -m "${message}"
+    sed -i "s/^BASE_IMAGE_VERSION=.*/BASE_IMAGE_VERSION=\"${newVersion}\"/g" .cico/setup.sh
+    git commit .cico/setup.sh -m "${message}"
 
     git push -u origin ${branch}
     set +x
