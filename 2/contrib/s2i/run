@@ -242,39 +242,27 @@ delete_plugins(){
   fi
 }
 
-copy_plugins() {
-    echo "Copying $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
-    cp -frL /opt/openshift/plugins/* ${JENKINS_HOME}/plugins/
+symlink_plugins() {
+    echo "Symlinking $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
+    mkdir -p ${JENKINS_HOME}/plugins
+
+    ln -sf /opt/openshift/plugins/*.[jh]pi ${JENKINS_HOME}/plugins
+    cp -f /opt/openshift/plugins/version.txt ${JENKINS_HOME}/plugins
+
+    for i in /opt/openshift/plugins/*;do
+        for t in WEB META;do
+            [[ -d $i/${t}-INF ]] && {
+                a=${JENKINS_HOME}/plugins/$(basename $i)
+                [[ -d ${a} ]] || { echo "Plugin ${a} wasn't installed, let's wait for next boot."; continue ;}
+                rm -rf ${a}/${t}-INF
+                ln -sf ${i}/${t}-INF ${a}/
+            }
+        done
+    done
 }
 
-# version.txt is maintained to check if the plugins should be copied over or not
-# The version.txt in this directory https://github.com/fabric8io/openshift-jenkins-s2i-config/tree/master/plugins
-# should be updated when a plugin is updated
-if [ "$(ls -A /opt/openshift/plugins 2>/dev/null)" ]; then
-  mkdir -p ${JENKINS_HOME}/plugins
-  # if empty then only copy the plugins
-  if [ -z "$(ls -A ${JENKINS_HOME}/plugins)" ]; then
-      echo "plugins directory not found copy plugins"
-      copy_plugins
-  else
-    if [ ! -f ${JENKINS_HOME}/plugins/version.txt ]; then
-      echo "version.txt not found copy plugins"
-      copy_plugins
-    else
-      previous_version=$(<${JENKINS_HOME}/plugins/version.txt)
-      echo "version.txt previous_version: $previous_version"
-      new_version=$(</opt/openshift/plugins/version.txt)
-      echo "version.txt new_version: $new_version"
-      if [ $new_version -gt $previous_version ]; then
-        echo "There is a new version of plugin, copy over plugins"
-        copy_plugins
-        delete_plugins
-      else
-        echo "skip copying plugins"
-      fi
-    fi
-  fi
-fi
+# We always use plugins from the image
+symlink_plugins
 
 echo "Creating initial Jenkins 'admin' user ..."
 sed -i "s,<passwordHash>.*</passwordHash>,<passwordHash>$new_password_hash</passwordHash>,g" "${JENKINS_HOME}/users/admin/config.xml"
