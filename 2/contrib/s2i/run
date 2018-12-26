@@ -242,26 +242,24 @@ delete_plugins(){
   fi
 }
 
+clear_gluster_plugin() {
+    local plugins_dir="${JENKINS_HOME}/plugins"
+
+    if [ ! -L "$plugins_dir" ]; then
+        echo "Removing existing $plugins_dir from gluster storage"
+        rm -rf $plugins_dir
+    fi
+}
+
 symlink_plugins() {
-    echo "Symlinking $(ls /opt/openshift/plugins | wc -l) Jenkins plugins to ${JENKINS_HOME} ..."
-    mkdir -p ${JENKINS_HOME}/plugins
-
-    ln -sf /opt/openshift/plugins/*.[jh]pi ${JENKINS_HOME}/plugins
-    cp -f /opt/openshift/plugins/version.txt ${JENKINS_HOME}/plugins
-
-    for i in /opt/openshift/plugins/*;do
-        for t in WEB META;do
-            [[ -d $i/${t}-INF ]] && {
-                a=${JENKINS_HOME}/plugins/$(basename $i)
-                [[ -d ${a} ]] || { echo "Plugin ${a} wasn't installed, let's wait for next boot."; continue ;}
-                rm -rf ${a}/${t}-INF
-                ln -sf ${i}/${t}-INF ${a}/
-            }
-        done
-    done
+    if [ ! -L "${JENKINS_HOME}/plugins" ]; then
+        echo "Symlinking ${JENKINS_HOME}/plugins to /opt/openshift/plugins"
+        ln -sf /opt/openshift/plugins ${JENKINS_HOME}
+    fi
 }
 
 # We always use plugins from the image
+clear_gluster_plugin
 symlink_plugins
 
 echo "Creating initial Jenkins 'admin' user ..."

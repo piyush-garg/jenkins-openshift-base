@@ -6,19 +6,6 @@ JENKINS_INSTALL_DIR=$(mktemp -d --suffix=jenkins)
 echo "---> Copying repository files ..."
 cp -Rf /tmp/src/. ${JENKINS_INSTALL_DIR}
 
-uncompress_plugins() {
-    pushd ${JENKINS_DIR}/plugins >/dev/null && {
-        for plugin in *.jpi *.hpi;do
-            base=$(echo ${plugin}|sed 's/.[hj]pi$//')
-            [[ -d ${base} ]] && continue # should not happen i think
-            mkdir -p ${base}
-            pushd ${base} >/dev/null && {
-                unzip ../${plugin}
-            } && popd >/dev/null
-        done
-    } && popd >/dev/null
-}
-
 # Install jenkins plugins using plugin installer if user has "plugins.txt" file
 # in repository
 if [ -f ${JENKINS_INSTALL_DIR}/plugins.txt ]; then
@@ -35,7 +22,6 @@ if [ -d ${JENKINS_INSTALL_DIR}/plugins ]; then
   echo "---> Installing $(ls -l ${JENKINS_INSTALL_DIR}/plugins | grep ^- | wc -l) Jenkins plugins from plugins/ directory ..."
   cp -R ${JENKINS_INSTALL_DIR}/plugins/* ${JENKINS_DIR}/plugins/
   /usr/local/bin/fix-permissions ${JENKINS_DIR}/plugins
-  uncompress_plugins
 fi
 
 if [ -d ${JENKINS_INSTALL_DIR}/configuration ]; then
